@@ -1,5 +1,26 @@
-<div class="codeplayground_block">
-<p>CodePlaygroundXBlock: count is now
-    <span class='count'>{self.count}</span> (click me to increment).
-</p>
+<div class="problem-progress">{self.point_string}</div>
+
+<div>
+    <!-- Question content -->
+    <label><strong>Question:</strong></label>
+    <br/>
+    <label class="label" id="question">{self.code_skeleton}</label>
+
+    <!-- Code editor -->
+    <br/>
+    <br/>
+    <label for="codeEditor"><strong>Code Skeleton:</strong></label>
+    </br>
+    <textarea id="codeEditor" name="codeEditor" wrap="off" cols="50" rows="15">{self.code_skeleton}</textarea>
+    
+    <!-- Expected output -->
+    <br/>
+    <br/>
+    <label for="expected_output"><strong>Expected output:</strong></label>
+    <br/>
+    <label id="expected_output">{self.expected_output}</label>
+
+    <br/>
+    <br/>
+    <input type="button" class="input-main" value="Submit" />
 </div>

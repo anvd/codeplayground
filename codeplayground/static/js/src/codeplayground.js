@@ -1,22 +1,18 @@
-/* Javascript for CodePlaygroundXBlock. */
-function CodePlaygroundXBlock(runtime, element) {
+/* Javascript for CodePlayground XBlock (student_view). */
+function CodePlayground(runtime, xblock_element) {
 
-    function updateCount(result) {
-        $('.count', element).text(result.count);
-    }
+  function handleSubmissionResults(results) {
+    $(xblock_element).find('.problem-progress').html(results['points_earned'] + ' / ' + results['points_possible'] + ' points');
+  }
 
-    var handlerUrl = runtime.handlerUrl(element, 'increment_count');
-
-    $('p', element).click(function(eventObject) {
-        $.ajax({
-            type: "POST",
-            url: handlerUrl,
-            data: JSON.stringify({"hello": "world"}),
-            success: updateCount
-        });
-    });
-
-    $(function ($) {
-        /* Here's where you'd do things on page load. */
-    });
+  $(xblock_element).find('.input-main').bind('click', function() {
+    var data = {
+      "submitted_code": $(xblock_element).find('textarea[name=codeEditor]').val()
+    };
+    
+    // call the Python JSON handler (code_submit) and process returned value
+    var handlerUrl = runtime.handlerUrl(xblock_element, 'code_submit');
+    $.post(handlerUrl, JSON.stringify(data)).success(handleSubmissionResults);
+    
+  });
 }
