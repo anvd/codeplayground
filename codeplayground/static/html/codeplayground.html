@@ -1,17 +1,18 @@
+<!-- TODO use template -->
 <div class="problem-progress">{self.point_string}</div>
 
 <div>
     <!-- Question content -->
     <label><strong>Question:</strong></label>
     <br/>
-    <label class="label" id="question">{self.code_skeleton}</label>
+    <label class="label" id="question">{self.question_content}</label>
 
     <!-- Code editor -->
     <br/>
     <br/>
     <label for="codeEditor"><strong>Code Skeleton:</strong></label>
     </br>
-    <textarea id="codeEditor" name="codeEditor" wrap="off" cols="50" rows="15">{self.code_skeleton}</textarea>
+    <textarea id="codeEditor" name="codeEditor" wrap="off" cols="50" rows="15" style="height: 250px; width: 100%; margin-bottom: 10px;">{self.code_skeleton}</textarea>
     
     <!-- Expected output -->
     <br/>

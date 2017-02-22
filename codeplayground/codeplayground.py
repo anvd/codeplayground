@@ -6,9 +6,11 @@ from xblock.fragment import Fragment
 
 from submissions import api as sub_api
 from sub_api_util import SubmittingXBlockMixin
+from xblockutils.studio_editable import StudioEditableXBlockMixin
 
 
-class CodePlaygroundXBlock(XBlock, SubmittingXBlockMixin):
+@XBlock.needs("i18n")
+class CodePlaygroundXBlock(XBlock, SubmittingXBlockMixin, StudioEditableXBlockMixin):
     """
     An XBlock for teachers to write coding assignments and learners to practice coding.
     """
@@ -16,10 +18,6 @@ class CodePlaygroundXBlock(XBlock, SubmittingXBlockMixin):
     # Settings
     display_name = String(display_name="Title (Display name)", help="Title to display", default="Code playground", scope=Scope.settings)
 
-    attempts = Integer(display_name="Attempts",
-        help="Number of attempts taken by the student on this problem",
-        default=0,
-        scope=Scope.user_state)
     max_attempts = Integer(
         display_name="Maximum Attempts",
         help="Defines the number of times a student can try to answer this problem. If the value is not set, infinite attempts are allowed.",
@@ -35,11 +33,11 @@ class CodePlaygroundXBlock(XBlock, SubmittingXBlockMixin):
 
     # Fields are defined on the class.  You can access them in your code as
     # self.<fieldname>.
-    question_content = String("Enter question content?", default="Enter the question...", scope=Scope.content)
-    code_skeleton = String("Enter code here ...", default="Enter code...", scope=Scope.content)
-    expected_output = String("Expected output ...", default="Enter expected output...", scope=Scope.content)
+    question_content = String(display_name="Enter question content", help="Enter the question", default="question content ...", multiline_editor=True, scope=Scope.content)
+    code_skeleton = String(display_name="Code skeleton", help="Enter the code", default="Code skeleton...", multiline_editor=True, scope=Scope.content)
+    expected_output = String(display_name="Expected output", help="Enter expected output", default="Expected output...", multiline_editor=True, scope=Scope.content)
     
-    # editable_fields = ('display_name', 'question') TODO use StudioEditableXBlockMixin to generate the form
+    editable_fields = ('display_name', 'max_attempts', 'max_points', 'question_content', 'code_skeleton', 'expected_output')
     
     has_score = True
 
@@ -62,16 +60,16 @@ class CodePlaygroundXBlock(XBlock, SubmittingXBlockMixin):
 
         return frag
 
-    def studio_view(self, context=None):
-        """
-        The view of CodePlayground XBlock, shown to course author when clicking 'Edit' button in Studio
-        """
-        html = self.resource_string("static/html/codeplayground_edit.html")
-        frag = Fragment(html.format(self=self))
-        frag.add_css(self.resource_string("static/css/codeplayground.css"))
-        frag.add_javascript(self.resource_string("static/js/src/codeplayground_edit.js"))
-        frag.initialize_js('CodePlaygroundEdit')
-        return frag        
+#    def studio_view(self, context=None):
+#        """
+#        The view of CodePlayground XBlock, shown to course author when clicking 'Edit' button in Studio
+#        """
+#        html = self.resource_string("static/html/codeplayground_edit.html")
+#        frag = Fragment(html.format(self=self))
+#        frag.add_css(self.resource_string("static/css/codeplayground.css"))
+#        frag.add_javascript(self.resource_string("static/js/src/codeplayground_edit.js"))
+#        frag.initialize_js('CodePlaygroundEdit')
+#        return frag        
 
     @XBlock.json_handler
     def studio_submit(self, data, suffix=''):
