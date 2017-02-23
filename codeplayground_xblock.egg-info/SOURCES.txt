@@ -5,6 +5,9 @@ codeplayground/static/README.txt
 codeplayground/static/css/codeplayground.css
 codeplayground/static/html/codeplayground.html
 codeplayground/static/js/src/codeplayground.js
+codeplayground/static/js/src/codeplayground.js
+codeplayground/static/js/ace/src-noconflict/mode-html.js
+codeplayground/static/js/ace/src-noconflict/theme-tommorow.js
 codeplayground_xblock.egg-info/PKG-INFO
 codeplayground_xblock.egg-info/SOURCES.txt
 codeplayground_xblock.egg-info/dependency_links.txt

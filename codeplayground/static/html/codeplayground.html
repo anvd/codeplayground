@@ -1,27 +1,36 @@
 <!-- TODO use template -->
-<div class="problem-progress">{self.point_string}</div>
+<div class="problem-progress">{{ point_string }}</div>
 
 <div>
     <!-- Question content -->
     <label><strong>Question:</strong></label>
     <br/>
-    <label class="label" id="question">{self.question_content}</label>
+    <label class="label" id="question">{{ question_content }}</label>
 
     <!-- Code editor -->
     <br/>
     <br/>
     <label for="codeEditor"><strong>Code Skeleton:</strong></label>
     </br>
-    <textarea id="codeEditor" name="codeEditor" wrap="off" cols="50" rows="15" style="height: 250px; width: 100%; margin-bottom: 10px;">{self.code_skeleton}</textarea>
+    <textarea id="codeEditor" name="codeEditor" class="codeEditor" wrap="off" cols="50" rows="15" style="height: 250px; width: 100%; margin-bottom: 10px;">{{ code_skeleton }}</textarea>
     
     <!-- Expected output -->
     <br/>
     <br/>
     <label for="expected_output"><strong>Expected output:</strong></label>
     <br/>
-    <label id="expected_output">{self.expected_output}</label>
+    <pre>{{ expected_output | linebreaks }}</pre>
+    
+    <!-- Predefined result -->
+    {% if showanswer %}
+    <br/>
+    <br/>
+    <pre name="answer">{{ answer }}</pre>
+    {% endif %}
 
     <br/>
-    <br/>
-    <input type="button" class="input-main" value="Submit" />
+    <input type="button" class="input-main" name='submit-button' value="Submit" />
+    {% if showanswer %}
+    <input type="button" class="input-main" name='showanswer-button' value="Show Answer" />
+    {% endif %}
 </div>

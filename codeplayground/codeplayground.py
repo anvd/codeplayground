@@ -1,13 +1,18 @@
 import pkg_resources
 
 from xblock.core import XBlock
-from xblock.fields import Scope, String, Integer
+from xblock.fields import Scope, String, Integer, Boolean
 from xblock.fragment import Fragment
 
 from submissions import api as sub_api
 from sub_api_util import SubmittingXBlockMixin
-from xblockutils.studio_editable import StudioEditableXBlockMixin
 
+from xblockutils.studio_editable import StudioEditableXBlockMixin
+from xblockutils.resources import ResourceLoader
+
+from utils import load_resource
+
+loader = ResourceLoader(__name__)
 
 @XBlock.needs("i18n")
 class CodePlaygroundXBlock(XBlock, SubmittingXBlockMixin, StudioEditableXBlockMixin):
@@ -30,6 +35,19 @@ class CodePlaygroundXBlock(XBlock, SubmittingXBlockMixin, StudioEditableXBlockMi
         scope=Scope.settings)
     # gherkin_file = String(display_name="Gherkin file", help="BDD feature file name", default="", scope=Scope.settings)
     
+    SHOW_ANSWER_BUTTON_SHOW_TEXT = "Show Answer"
+    SHOW_ANSWER_BUTTON_HIDE_TEXT = "Hide Answer"
+
+    showanswer = Boolean(
+        display_name=SHOW_ANSWER_BUTTON_SHOW_TEXT,
+        help="Defines when to show the answer",
+        scope=Scope.settings,
+        default=False
+    )
+    
+    
+    answer = String(display_name="Answer", help="Enters the answer to show to learner", default="", multiline_editor=True, scope=Scope.settings)
+    
 
     # Fields are defined on the class.  You can access them in your code as
     # self.<fieldname>.
@@ -37,7 +55,7 @@ class CodePlaygroundXBlock(XBlock, SubmittingXBlockMixin, StudioEditableXBlockMi
     code_skeleton = String(display_name="Code skeleton", help="Enter the code", default="Code skeleton...", multiline_editor=True, scope=Scope.content)
     expected_output = String(display_name="Expected output", help="Enter expected output", default="Expected output...", multiline_editor=True, scope=Scope.content)
     
-    editable_fields = ('display_name', 'max_attempts', 'max_points', 'question_content', 'code_skeleton', 'expected_output')
+    editable_fields = ('display_name', 'max_attempts', 'max_points', 'question_content', 'code_skeleton', 'expected_output', 'showanswer', 'answer')
     
     has_score = True
 
@@ -51,25 +69,22 @@ class CodePlaygroundXBlock(XBlock, SubmittingXBlockMixin, StudioEditableXBlockMi
         """
         The primary view of the CodePlayground XBlock, shown to students when viewing courses.
         """
-        # TODO render points
         
-        html = self.resource_string("static/html/codeplayground.html")
-        frag = Fragment(html.format(self=self))
+        context = { 
+            'point_string': self.point_string,
+            'question_content': self.question_content,
+            'showanswer': self.showanswer,
+            'code_skeleton': self.code_skeleton,
+            'expected_output': self.expected_output,
+            'answer': self.answer
+        }
+        
+        frag = Fragment()
+        frag.content = loader.render_template('static/html/codeplayground.html', context)
         frag.add_javascript(self.resource_string("static/js/src/codeplayground.js"))
         frag.initialize_js('CodePlayground')
 
         return frag
-
-#    def studio_view(self, context=None):
-#        """
-#        The view of CodePlayground XBlock, shown to course author when clicking 'Edit' button in Studio
-#        """
-#        html = self.resource_string("static/html/codeplayground_edit.html")
-#        frag = Fragment(html.format(self=self))
-#        frag.add_css(self.resource_string("static/css/codeplayground.css"))
-#        frag.add_javascript(self.resource_string("static/js/src/codeplayground_edit.js"))
-#        frag.initialize_js('CodePlaygroundEdit')
-#        return frag        
 
     @XBlock.json_handler
     def studio_submit(self, data, suffix=''):
@@ -112,6 +127,23 @@ class CodePlaygroundXBlock(XBlock, SubmittingXBlockMixin, StudioEditableXBlockMi
         return {
             'points_earned': new_score['points_earned'],
             'points_possible': new_score['points_possible']
+        }
+        
+    @XBlock.json_handler
+    def showanswer_clicked(self, data, suffix=''):
+        """
+        """
+        show_answer_button_text = data['answer_button_state']
+        new_button_text = ""
+        
+        if (show_answer_button_text == self.SHOW_ANSWER_BUTTON_SHOW_TEXT):
+            new_button_text = self.SHOW_ANSWER_BUTTON_HIDE_TEXT
+        else:
+            new_button_text = self.SHOW_ANSWER_BUTTON_SHOW_TEXT
+        
+        return {
+            'answer': self.answer,
+            'button_text': new_button_text
         }
 
     
