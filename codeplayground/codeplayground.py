@@ -33,6 +33,8 @@ class CodePlaygroundXBlock(XBlock, SubmittingXBlockMixin, StudioEditableXBlockMi
         help="Defines the maximum points that the learner can earn.",
         default=1,
         scope=Scope.settings)
+    
+    grader_id = String(display_name="Grader Id", help="Grader identifier", default="", scope=Scope.settings)
     # gherkin_file = String(display_name="Gherkin file", help="BDD feature file name", default="", scope=Scope.settings)
     
     SHOW_ANSWER_BUTTON_SHOW_TEXT = "Show Answer"
@@ -45,79 +47,67 @@ class CodePlaygroundXBlock(XBlock, SubmittingXBlockMixin, StudioEditableXBlockMi
         default=False
     )
     
+    computed_answer_button_text = String(scope=Scope.user_state, default=SHOW_ANSWER_BUTTON_SHOW_TEXT) 
     
     answer = String(display_name="Answer", help="Enters the answer to show to learner", default="", multiline_editor=True, scope=Scope.settings)
     
-
-    # Fields are defined on the class.  You can access them in your code as
-    # self.<fieldname>.
     question_content = String(display_name="Enter question content", help="Enter the question", default="question content ...", multiline_editor=True, scope=Scope.content)
     code_skeleton = String(display_name="Code skeleton", help="Enter the code", default="Code skeleton...", multiline_editor=True, scope=Scope.content)
     expected_output = String(display_name="Expected output", help="Enter expected output", default="Expected output...", multiline_editor=True, scope=Scope.content)
     
-    editable_fields = ('display_name', 'max_attempts', 'max_points', 'question_content', 'code_skeleton', 'expected_output', 'showanswer', 'answer')
+    # For StudioEditableXBlockMixin to create the "edit" form
+    editable_fields = ('display_name', 'max_attempts', 'max_points', 'question_content', 'code_skeleton', 'expected_output', 'showanswer', 'answer', 'grader_id')
     
     has_score = True
+
 
     def resource_string(self, path):
         """Handy helper for getting resources from our kit."""
         data = pkg_resources.resource_string(__name__, path)
         return data.decode("utf8")
 
-    # TO-DO: change this view to display your data your own way.
+
     def student_view(self, context=None):
         """
         The primary view of the CodePlayground XBlock, shown to students when viewing courses.
         """
         
+        if not(self.showanswer):
+            self.computed_answer_button_text = self.SHOW_ANSWER_BUTTON_SHOW_TEXT
+
         context = { 
             'point_string': self.point_string,
             'question_content': self.question_content,
             'showanswer': self.showanswer,
             'code_skeleton': self.code_skeleton,
             'expected_output': self.expected_output,
-            'answer': self.answer
+            'answer': '' if (self.computed_answer_button_text == self.SHOW_ANSWER_BUTTON_SHOW_TEXT) else self.answer,
+            'answer_button_text': self.computed_answer_button_text
         }
         
+        
         frag = Fragment()
+        
         frag.content = loader.render_template('static/html/codeplayground.html', context)
+        frag.add_css(self.resource_string("static/css/codeplayground.css"))
         frag.add_javascript(self.resource_string("static/js/src/codeplayground.js"))
         frag.initialize_js('CodePlayground')
 
         return frag
 
-    @XBlock.json_handler
-    def studio_submit(self, data, suffix=''):
-        """
-        Course author pressed the Save button in Studio
-        """
 
-        result = {"submitted": "false", "saved": "false", "message": "", "preview": ""}
-
-        if len(data) > 0:
-
-            # Used for the preview feature
-            # if data["commit"] == "true":
-            
-            self.display_name = data["display_name"]
-            self.question_content = data["question_content"]
-            self.code_skeleton = data["code_skeleton"]
-            self.expected_output = data["expected_output"]
-            self.max_points = data["max_points"]
-            # self.gherkin_file = data["gherkin_file"]
-
-            result["submitted"] = "true"
-            result["saved"] = "true"
-
-        return result
-    
     @XBlock.json_handler
     def code_submit(self, data, suffix=''):
         """
-        Learner pressed submit button to submit code
+        AJAX handler for Submit button
         """
         # TODO query feature file to run the testsuite
         # For the moment, if feature file is specified then returns 1 else 0
+        
+        if (self.grader_id == ''):
+            return {
+                'error': 'You can not submit the assignment as no grader_id is configured'
+            }
 
         submission = sub_api.create_submission(self.student_item_key, data)
         # sub_api.set_score(submission['uuid'], 1, 1) max_points.
@@ -129,21 +119,22 @@ class CodePlaygroundXBlock(XBlock, SubmittingXBlockMixin, StudioEditableXBlockMi
             'points_possible': new_score['points_possible']
         }
         
+        
     @XBlock.json_handler
     def showanswer_clicked(self, data, suffix=''):
         """
+        AJAX handler for "Show/Hide Answer" button
         """
-        show_answer_button_text = data['answer_button_state']
-        new_button_text = ""
+        previous_show_answer_button_text = data['previous_show_answer_button_text']
         
-        if (show_answer_button_text == self.SHOW_ANSWER_BUTTON_SHOW_TEXT):
-            new_button_text = self.SHOW_ANSWER_BUTTON_HIDE_TEXT
+        if (previous_show_answer_button_text == self.SHOW_ANSWER_BUTTON_SHOW_TEXT):
+            self.computed_answer_button_text = self.SHOW_ANSWER_BUTTON_HIDE_TEXT
         else:
-            new_button_text = self.SHOW_ANSWER_BUTTON_SHOW_TEXT
-        
+            self.computed_answer_button_text = self.SHOW_ANSWER_BUTTON_SHOW_TEXT
+            
         return {
             'answer': self.answer,
-            'button_text': new_button_text
+            'show_answer_button_text': self.computed_answer_button_text
         }
 
     

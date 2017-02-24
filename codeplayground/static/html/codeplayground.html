@@ -1,5 +1,8 @@
-<!-- TODO use template -->
 <div class="problem-progress">{{ point_string }}</div>
+
+<div name="errorMessageSection">
+	<label name="errorMessage"></label>
+</div>
 
 <div>
     <!-- Question content -->
@@ -23,14 +26,16 @@
     
     <!-- Predefined result -->
     {% if showanswer %}
-    <br/>
-    <br/>
-    <pre name="answer">{{ answer }}</pre>
+    <div name="codeSection">
+    	<br/>
+    	<label><strong>Resulting code:</strong></label>
+    	<pre name="answer"><code>{{ answer }}</code></pre>
+    </div>
     {% endif %}
 
     <br/>
     <input type="button" class="input-main" name='submit-button' value="Submit" />
     {% if showanswer %}
-    <input type="button" class="input-main" name='showanswer-button' value="Show Answer" />
+    <input type="button" class="input-main" name='showanswer-button' value="{{ answer_button_text }}" />
     {% endif %}
 </div>

@@ -1,1 +1,4 @@
 /* CSS for CodePlayground */
+code { 
+    background: hsl(220, 80%, 90%); 
+}
