@@ -11,6 +11,7 @@ from xblockutils.studio_editable import StudioEditableXBlockMixin
 from xblockutils.resources import ResourceLoader
 
 from utils import load_resource
+import java_code_grader 
 
 loader = ResourceLoader(__name__)
 
@@ -21,7 +22,11 @@ class CodePlaygroundXBlock(XBlock, SubmittingXBlockMixin, StudioEditableXBlockMi
     """
 
     # Settings
-    display_name = String(display_name="Title (Display name)", help="Title to display", default="Code playground", scope=Scope.settings)
+    display_name = String(
+        display_name="Title (Display name)", 
+        help="Title to display", 
+        default="Code Playground", 
+        scope=Scope.settings)
 
     max_attempts = Integer(
         display_name="Maximum Attempts",
@@ -37,23 +42,44 @@ class CodePlaygroundXBlock(XBlock, SubmittingXBlockMixin, StudioEditableXBlockMi
     grader_id = String(display_name="Grader Id", help="Grader identifier", default="", scope=Scope.settings)
     # gherkin_file = String(display_name="Gherkin file", help="BDD feature file name", default="", scope=Scope.settings)
     
-    SHOW_ANSWER_BUTTON_SHOW_TEXT = "Show Answer"
-    SHOW_ANSWER_BUTTON_HIDE_TEXT = "Hide Answer"
+    SHOW_ANSWER_BUTTON_TEXT = "Show Answer"
+    HIDE_ANSWER_BUTTON_TEXT = "Hide Answer"
 
     showanswer = Boolean(
-        display_name=SHOW_ANSWER_BUTTON_SHOW_TEXT,
-        help="Defines when to show the answer",
-        scope=Scope.settings,
-        default=False
+        display_name=SHOW_ANSWER_BUTTON_TEXT,
+        help="Defines when to show the 'Show/Hide Answer' button",
+        default=False,
+        scope=Scope.settings
     )
     
-    computed_answer_button_text = String(scope=Scope.user_state, default=SHOW_ANSWER_BUTTON_SHOW_TEXT) 
+    answer_button_text = String(scope=Scope.user_state, default=SHOW_ANSWER_BUTTON_TEXT) 
     
-    answer = String(display_name="Answer", help="Enters the answer to show to learner", default="", multiline_editor=True, scope=Scope.settings)
+    answer = String(
+        display_name="Answer", 
+        help="Enters the answer to show to learner", 
+        default="", multiline_editor=True, 
+        scope=Scope.settings)
     
-    question_content = String(display_name="Enter question content", help="Enter the question", default="question content ...", multiline_editor=True, scope=Scope.content)
-    code_skeleton = String(display_name="Code skeleton", help="Enter the code", default="Code skeleton...", multiline_editor=True, scope=Scope.content)
-    expected_output = String(display_name="Expected output", help="Enter expected output", default="Expected output...", multiline_editor=True, scope=Scope.content)
+    question_content = String(
+        display_name="Enter question content", 
+        help="Enter the question", 
+        default="Please enter question content ...", 
+        multiline_editor=True, 
+        scope=Scope.content)
+    
+    code_skeleton = String(
+        display_name="Code skeleton", 
+        help="Enter the code", 
+        default="Please enter code skeleton...", 
+        multiline_editor=True, 
+        scope=Scope.content)
+    
+    expected_output = String(
+        display_name="Expected output", 
+        help="Enter expected output", 
+        default="Please enter the expected output...", 
+        multiline_editor=True, 
+        scope=Scope.content)
     
     # For StudioEditableXBlockMixin to create the "edit" form
     editable_fields = ('display_name', 'max_attempts', 'max_points', 'question_content', 'code_skeleton', 'expected_output', 'showanswer', 'answer', 'grader_id')
@@ -73,7 +99,7 @@ class CodePlaygroundXBlock(XBlock, SubmittingXBlockMixin, StudioEditableXBlockMi
         """
         
         if not(self.showanswer):
-            self.computed_answer_button_text = self.SHOW_ANSWER_BUTTON_SHOW_TEXT
+            self.answer_button_text = self.SHOW_ANSWER_BUTTON_TEXT
 
         context = { 
             'point_string': self.point_string,
@@ -81,8 +107,8 @@ class CodePlaygroundXBlock(XBlock, SubmittingXBlockMixin, StudioEditableXBlockMi
             'showanswer': self.showanswer,
             'code_skeleton': self.code_skeleton,
             'expected_output': self.expected_output,
-            'answer': '' if (self.computed_answer_button_text == self.SHOW_ANSWER_BUTTON_SHOW_TEXT) else self.answer,
-            'answer_button_text': self.computed_answer_button_text
+            'answer': '' if (self.answer_button_text == self.SHOW_ANSWER_BUTTON_TEXT) else self.answer,
+            'answer_button_text': self.answer_button_text
         }
         
         
@@ -101,8 +127,6 @@ class CodePlaygroundXBlock(XBlock, SubmittingXBlockMixin, StudioEditableXBlockMi
         """
         AJAX handler for Submit button
         """
-        # TODO query feature file to run the testsuite
-        # For the moment, if feature file is specified then returns 1 else 0
         
         if (self.grader_id == ''):
             return {
@@ -110,8 +134,17 @@ class CodePlaygroundXBlock(XBlock, SubmittingXBlockMixin, StudioEditableXBlockMi
             }
 
         submission = sub_api.create_submission(self.student_item_key, data)
-        # sub_api.set_score(submission['uuid'], 1, 1) max_points.
-        sub_api.set_score(submission['uuid'], 1, self.max_points)
+
+        submitted_code = data["submitted_code"]
+        grading_result = java_code_grader.grade(self.grader_id, submitted_code)
+        if grading_result.has_key("error"):
+            sub_api.set_score(submission['uuid'], 0, self.max_points)
+            return {
+                 'error': grading_result.get("error")
+            }
+        else:
+            sub_api.set_score(submission['uuid'], self.max_points, self.max_points)
+        
         new_score = sub_api.get_score(self.student_item_key)
 
         return {
@@ -125,16 +158,16 @@ class CodePlaygroundXBlock(XBlock, SubmittingXBlockMixin, StudioEditableXBlockMi
         """
         AJAX handler for "Show/Hide Answer" button
         """
-        previous_show_answer_button_text = data['previous_show_answer_button_text']
+        previous_answer_button_text = data['previous_answer_button_text']
         
-        if (previous_show_answer_button_text == self.SHOW_ANSWER_BUTTON_SHOW_TEXT):
-            self.computed_answer_button_text = self.SHOW_ANSWER_BUTTON_HIDE_TEXT
+        if (previous_answer_button_text == self.SHOW_ANSWER_BUTTON_TEXT):
+            self.answer_button_text = self.HIDE_ANSWER_BUTTON_TEXT
         else:
-            self.computed_answer_button_text = self.SHOW_ANSWER_BUTTON_SHOW_TEXT
+            self.answer_button_text = self.SHOW_ANSWER_BUTTON_TEXT
             
         return {
             'answer': self.answer,
-            'show_answer_button_text': self.computed_answer_button_text
+            'answer_button_text': self.answer_button_text
         }
 
     

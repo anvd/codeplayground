@@ -2,31 +2,42 @@
 function CodePlayground(runtime, xblock_element) {
 
 	function handleSubmissionResult(results) {
+	
+		debugger;
 		var errorMessage = results['error'];
+		var errorSectionElement = $(xblock_element).find('div[name=errorSection]');
+		
+		
 		if (errorMessage != null) {
-			$('xblock_element').find('div[name=errorMessageSession]').show();
-			$('xblock_element').find('label[name=errorMessage]').val(errorMessage)
+			var errorLabelNode = "<label class='submit-error'>" + errorMessage + "</label>";
+			errorSectionElement.append(errorLabelNode);
 			return;
 		} else {
-			$('xblock_element').find('div[name=errorMessageSession]').hide();
+			errorSectionElement.empty();
 		}
 	
     	$(xblock_element).find('.problem-progress').html(results['points_earned'] + ' / ' + results['points_possible'] + ' points');
   	}
   	
+  	
   	function handleShowAnswerResult(results) {
-  		var show_answer_button_text = results['show_answer_button_text'];
-  		$(xblock_element).find('input[name=showanswer-button]').val(show_answer_button_text); 
+  		var codeSectionElement = $(xblock_element).find('div[name=codeSection]');
+  	
+  		var answer_button_text = results['answer_button_text'];
+  		$(xblock_element).find('input[name=showanswer-button]').val(answer_button_text); 
   		
-  		debugger;
-  		if (show_answer_button_text == 'Show Answer') {
-  			$(xblock_element).find('pre[name=answer]').html('');
-  			$(xblock_element).find('div[name=codeSection]').hide();
+  		if (answer_button_text == 'Show Answer') {
+  			codeSectionElement.empty();
   		} else {
-  			$(xblock_element).find('pre[name=answer]').html(results['answer']);
-  			$(xblock_element).find('div[name=codeSection]').show();
+  			// TODO use template to avoid the maintenance nightmare
+  			var labelNode = "<label><strong>Answer:</strong></label>";
+  			codeSectionElement.append(labelNode);
+  			
+  			var preNode = "<pre name=\"answer\"><code>" + results['answer'] + "</code></pre>";
+  			codeSectionElement.append(preNode);
   		}
   	}
+  	
 
   	$(xblock_element).find('input[name=submit-button]').bind('click', function() {
     	var data = {
@@ -37,9 +48,10 @@ function CodePlayground(runtime, xblock_element) {
     	$.post(handlerUrl, JSON.stringify(data)).success(handleSubmissionResult);
   	});
   	
+  	
   	$(xblock_element).find('input[name=showanswer-button]').bind('click', function() {
   		var data = {
-  			"previous_show_answer_button_text": $(xblock_element).find('input[name=showanswer-button]').val()
+  			"previous_answer_button_text": $(xblock_element).find('input[name=showanswer-button]').val()
   		}
   		
   		var handlerUrl = runtime.handlerUrl(xblock_element, 'showanswer_clicked');

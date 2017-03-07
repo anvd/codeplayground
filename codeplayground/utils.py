@@ -6,6 +6,8 @@
 import logging
 import pkg_resources
 
+
+import time
 from django.template import Context, Template
 
 # Globals ###########################################################
@@ -14,6 +16,10 @@ log = logging.getLogger(__name__)
 
 
 # Functions #########################################################
+
+
+current_milli_time = lambda: int(round(time.time() * 1000))
+
 
 def load_resource(resource_path):
     """

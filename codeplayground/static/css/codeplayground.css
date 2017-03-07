@@ -2,3 +2,8 @@
 code { 
     background: hsl(220, 80%, 90%); 
 }
+
+.submit-error {
+	color: rgb(255, 14, 14);
+	font-weight: bold;
+}

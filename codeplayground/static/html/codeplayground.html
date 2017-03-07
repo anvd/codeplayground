@@ -1,8 +1,6 @@
 <div class="problem-progress">{{ point_string }}</div>
 
-<div name="errorMessageSection">
-	<label name="errorMessage"></label>
-</div>
+<div name="errorSection"></div>
 
 <div>
     <!-- Question content -->
@@ -25,13 +23,13 @@
     <pre>{{ expected_output | linebreaks }}</pre>
     
     <!-- Predefined result -->
-    {% if showanswer %}
     <div name="codeSection">
+    	{% if showanswer and answer_button_text == "Hide Answer" %}
     	<br/>
-    	<label><strong>Resulting code:</strong></label>
+    	<label><strong>Answer:</strong></label>
     	<pre name="answer"><code>{{ answer }}</code></pre>
+    	{% endif %}
     </div>
-    {% endif %}
 
     <br/>
     <input type="button" class="input-main" name='submit-button' value="Submit" />
