@@ -20,6 +20,19 @@ def clean_up(java_file_path):
         os.remove(java_file_path)    
 
 
+def build_string_message(stdout_or_stderr):
+    message = ""
+    for line in stdout_or_stderr.split(os.linesep):
+        message += (line + "<br>")
+    
+    br_size = len("<br>")
+    message_list = list(message)
+    message_size = len(message_list)
+    message_list[ (message_size - 1 - br_size):(message_size - 1) ] = ""; # remove the last "<br>"
+    
+    return "".join(message_list)
+
+
 def grade(grader_id, submitted_code):
     """
     """
@@ -41,7 +54,7 @@ def grade(grader_id, submitted_code):
     if (len(err) > 0):
         clean_up(java_file_path)
         return {
-            "error": str(err)
+            "error": build_string_message(err)
         }
     
     
@@ -69,7 +82,7 @@ def grade(grader_id, submitted_code):
     if (len(err) > 0):
         clean_up(java_file_path)
         return {
-            "error": str(err)
+            "error": build_string_message(err)
         }
 
     # Step 4: clean up

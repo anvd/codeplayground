@@ -1,7 +1,7 @@
 import pkg_resources
 
 from xblock.core import XBlock
-from xblock.fields import Scope, String, Integer, Boolean
+from xblock.fields import Scope, String, Integer, Boolean, List
 from xblock.fragment import Fragment
 
 from submissions import api as sub_api
@@ -14,6 +14,15 @@ from utils import load_resource
 import java_code_grader 
 
 loader = ResourceLoader(__name__)
+
+
+def language_provider():
+    return [ 'Java', 'Python' ]
+
+
+def assigment_provider():
+    return [ 'MultiplyANumberByTwoGrader', 'MultiplyTwoNumbersGrader' ]
+
 
 @XBlock.needs("i18n")
 class CodePlaygroundXBlock(XBlock, SubmittingXBlockMixin, StudioEditableXBlockMixin):
@@ -28,6 +37,22 @@ class CodePlaygroundXBlock(XBlock, SubmittingXBlockMixin, StudioEditableXBlockMi
         default="Code Playground", 
         scope=Scope.settings)
 
+    languages = String(
+        display_name="Programming language",
+        help="Select the programming language",
+        values=language_provider,
+        default='Java',
+        scope=Scope.settings
+    )
+    
+    assignments = String(
+        display_name="Assignment",
+        help="Select the assignment",
+        values=assigment_provider,
+        default='MultiplyANumberByTwoGrader',
+        scope=Scope.settings
+    )
+    
     max_attempts = Integer(
         display_name="Maximum Attempts",
         help="Defines the number of times a student can try to answer this problem. If the value is not set, infinite attempts are allowed.",
@@ -82,7 +107,7 @@ class CodePlaygroundXBlock(XBlock, SubmittingXBlockMixin, StudioEditableXBlockMi
         scope=Scope.content)
     
     # For StudioEditableXBlockMixin to create the "edit" form
-    editable_fields = ('display_name', 'max_attempts', 'max_points', 'question_content', 'code_skeleton', 'expected_output', 'showanswer', 'answer', 'grader_id')
+    editable_fields = ('display_name', 'languages', 'assignments' ,'max_attempts', 'max_points', 'question_content', 'code_skeleton', 'expected_output', 'showanswer', 'answer', 'grader_id')
     
     has_score = True
 
@@ -91,6 +116,31 @@ class CodePlaygroundXBlock(XBlock, SubmittingXBlockMixin, StudioEditableXBlockMi
         """Handy helper for getting resources from our kit."""
         data = pkg_resources.resource_string(__name__, path)
         return data.decode("utf8")
+
+
+    def studio_view(self, context):
+        """
+        Render a form for editing this XBlock (override the StudioEditableXBlockMixin's method)
+        """
+        fragment = Fragment()
+        context = {'fields': []}
+        # Build a list of all the fields that can be edited:
+        for field_name in self.editable_fields:
+            field = self.fields[field_name]
+            assert field.scope in (Scope.content, Scope.settings), (
+                "Only Scope.content or Scope.settings fields can be used with "
+                "StudioEditableXBlockMixin. Other scopes are for user-specific data and are "
+                "not generally created/configured by content authors in Studio."
+            )
+            field_info = self._make_field_info(field_name, field)
+            if field_info is not None:
+                context["fields"].append(field_info)
+        fragment.content = loader.render_template('static/html/code_playground_studio_edit.html', context)
+        # fragment.add_javascript(loader.load_unicode('public/studio_edit.js'))
+        fragment.add_javascript(loader.load_unicode('static/js/src/codeplayground_studio_edit.js'))
+        fragment.initialize_js('StudioEditableXBlockMixin')
+        return fragment
+    
 
 
     def student_view(self, context=None):
@@ -139,18 +189,20 @@ class CodePlaygroundXBlock(XBlock, SubmittingXBlockMixin, StudioEditableXBlockMi
         grading_result = java_code_grader.grade(self.grader_id, submitted_code)
         if grading_result.has_key("error"):
             sub_api.set_score(submission['uuid'], 0, self.max_points)
-            return {
-                 'error': grading_result.get("error")
-            }
         else:
             sub_api.set_score(submission['uuid'], self.max_points, self.max_points)
         
         new_score = sub_api.get_score(self.student_item_key)
-
-        return {
+        
+        submit_result = {
             'points_earned': new_score['points_earned'],
             'points_possible': new_score['points_possible']
         }
+        
+        if grading_result.has_key("error"):
+            submit_result["error"] = grading_result["error"]
+            
+        return submit_result
         
         
     @XBlock.json_handler
@@ -198,3 +250,5 @@ class CodePlaygroundXBlock(XBlock, SubmittingXBlockMixin, StudioEditableXBlockMi
         else:
             return str(self.max_points) + ' point(s) possible'
             
+
+

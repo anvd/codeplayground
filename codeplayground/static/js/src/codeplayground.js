@@ -7,13 +7,11 @@ function CodePlayground(runtime, xblock_element) {
 		var errorMessage = results['error'];
 		var errorSectionElement = $(xblock_element).find('div[name=errorSection]');
 		
-		
+		errorSectionElement.empty();
 		if (errorMessage != null) {
+			
 			var errorLabelNode = "<label class='submit-error'>" + errorMessage + "</label>";
 			errorSectionElement.append(errorLabelNode);
-			return;
-		} else {
-			errorSectionElement.empty();
 		}
 	
     	$(xblock_element).find('.problem-progress').html(results['points_earned'] + ' / ' + results['points_possible'] + ' points');
