@@ -1,3 +1,3 @@
 from .codeplayground import CodePlaygroundXBlock
 from .sub_api_util import SubmittingXBlockMixin
-import java_code_grader
+from languages.java import java_code_grader

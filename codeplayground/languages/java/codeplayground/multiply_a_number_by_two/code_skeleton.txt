@@ -1,0 +1,8 @@
+package codeplayground.multiply_two_numbers;
+
+public class MultiplyTwoNumbers {
+
+	public static int Puzzle(final int x, final int y) {
+		// Implement you code here
+	}
+}

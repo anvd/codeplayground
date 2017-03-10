@@ -37,6 +37,7 @@ def grade(grader_id, submitted_code):
     """
     """
     
+    # Step 0: write the submitted code to a temporary file in the user's home folder
     base_path = os.path.expanduser("~")
     java_file_path = write_submitted_code_to_file(base_path, submitted_code)
     
@@ -44,13 +45,11 @@ def grade(grader_id, submitted_code):
     # Step 1: ask GradersPreparer to do the preparation
     python_file_folder = os.path.dirname(os.path.realpath(__file__))
     # print 'python_file_folder = ' + python_file_folder
-    preparer_classpath = python_file_folder + "/graders/:" + python_file_folder + "/graders/lib/cucumber-core-1.2.5.jar:" + python_file_folder + "/graders/lib/cucumber-html-0.2.3.jar:" + python_file_folder + "/graders/lib/cucumber-java-1.2.4.jar:" + python_file_folder + "/graders/lib/cucumber-junit-1.2.5.jar:" + python_file_folder + "/graders/lib/cucumber-jvm-deps-1.0.5.jar:" + python_file_folder + "/graders/lib/gherkin-2.12.2.jar:" + python_file_folder + "/graders/lib/hamcrest-core-1.4-atlassian-1.jar:" + python_file_folder + "/graders/lib/jchronic-0.2.6.jar:" + python_file_folder + "/graders/lib/jcommander-1.64.jar:" + python_file_folder + "/graders/lib/junit-4.12.jar"
+    preparer_classpath = python_file_folder + "/languages/java/:" + python_file_folder + "/languages/java/lib/cucumber-core-1.2.5.jar:" + python_file_folder + "/languages/java/lib/cucumber-html-0.2.3.jar:" + python_file_folder + "/languages/java/lib/cucumber-java-1.2.4.jar:" + python_file_folder + "/languages/java/lib/cucumber-junit-1.2.5.jar:" + python_file_folder + "/languages/java/lib/cucumber-jvm-deps-1.0.5.jar:" + python_file_folder + "/languages/java/lib/gherkin-2.12.2.jar:" + python_file_folder + "/languages/java/lib/hamcrest-core-1.4-atlassian-1.jar:" + python_file_folder + "/languages/java/lib/jchronic-0.2.6.jar:" + python_file_folder + "/languages/java/lib/jcommander-1.64.jar:" + python_file_folder + "/languages/java/lib/junit-4.12.jar"
     p = subprocess.Popen(["java", "-cp", preparer_classpath, "codeplayground.GradersPreparer", "-graderId", grader_id, "-submittedFilePath", java_file_path, "-cleanUp", "true"], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     out, err = p.communicate()
     
     # Step 1.1: process errors
-    #print 'Preparer Error : ' + err
-    # print 'Preparer len(err): ' + str(len(err))
     if (len(err) > 0):
         clean_up(java_file_path)
         return {

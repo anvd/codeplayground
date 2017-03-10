@@ -51,14 +51,25 @@ function StudioEditableXBlockMixin(runtime, element) {
         };
         
         var languageFieldChanged = function() {
-        	console.log('languageFieldChanged to ' + $field.val() + ' implement it')
+        	console.log('languageFieldChanged to ' + $field.val() + ' implement it');
         	// TODO implement it
-        }
+        };
+        
+        var handleAssignmentChangedResult = function(data) {
+        	console.log('handleAssignmentChangedResult invoked');
+        	// TODO implement it
+        };
         
         var assignmentFieldChanged = function() {
-        	console.log('assignmentFieldChanged to ' + $field.val() + ' implement it')
-        	// TODO implement it
-        }
+			var assignment_element = $(element).find('select[id=xb-field-edit-assignments]');
+			
+        	var selectedAssignment = {
+        		"assignment": assignment_element.val()
+        	};
+        	
+        	var handlerUrl = runtime.handlerUrl(element, 'assignment_changed');
+  			$.post(handlerUrl, JSON.stringify(selectedAssignment)).success(handleAssignmentChangedResult);
+        };
         
         var field_id = $field.attr('id');
         if (field_id == 'xb-field-edit-languages') {

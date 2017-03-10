@@ -11,13 +11,13 @@ from xblockutils.studio_editable import StudioEditableXBlockMixin
 from xblockutils.resources import ResourceLoader
 
 from utils import load_resource
-import java_code_grader 
+from languages.java import java_code_grader 
 
 loader = ResourceLoader(__name__)
 
 
 def language_provider():
-    return [ 'Java', 'Python' ]
+    return [ 'C', 'C++', 'C#', 'Go', 'Java', 'Linux Shell', 'Perl', 'Python', 'R', 'Ruby', 'Scala' ]
 
 
 def assigment_provider():
@@ -136,8 +136,7 @@ class CodePlaygroundXBlock(XBlock, SubmittingXBlockMixin, StudioEditableXBlockMi
             if field_info is not None:
                 context["fields"].append(field_info)
         fragment.content = loader.render_template('static/html/code_playground_studio_edit.html', context)
-        # fragment.add_javascript(loader.load_unicode('public/studio_edit.js'))
-        fragment.add_javascript(loader.load_unicode('static/js/src/codeplayground_studio_edit.js'))
+        fragment.add_javascript(loader.load_unicode('static/js/codeplayground_studio_edit.js'))
         fragment.initialize_js('StudioEditableXBlockMixin')
         return fragment
     
@@ -166,10 +165,17 @@ class CodePlaygroundXBlock(XBlock, SubmittingXBlockMixin, StudioEditableXBlockMi
         
         frag.content = loader.render_template('static/html/codeplayground.html', context)
         frag.add_css(self.resource_string("static/css/codeplayground.css"))
-        frag.add_javascript(self.resource_string("static/js/src/codeplayground.js"))
+        frag.add_javascript(self.resource_string("static/js/codeplayground.js"))
         frag.initialize_js('CodePlayground')
 
         return frag
+    
+    
+    @XBlock.json_handler
+    def assignment_changed(self, data, suffix=''):
+        
+        # TODO query assignment information
+        pass
 
 
     @XBlock.json_handler
